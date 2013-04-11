@@ -2,7 +2,8 @@
 
 var program = require('commander'),
 	server = require('../src/server'),
-	pkg = require('../package.json');
+	pkg = require('../package.json'),
+	gaze = require('gaze');
 
 function list(val) {
 	return val.split(' ');
@@ -25,6 +26,34 @@ if (program.watch) {
 
 server.listen(program.port);
 
+// Watch
+
+gaze(program.watch, function (err) {
+	if (err) {
+		console.log('Error while watching', err);
+		return;
+	}
+	
+	this.on('changed', function (filepath) {
+		var ext = filepath.match(/\.\w+$/i);
+		
+		if (!ext) {
+			return;
+		}
+
+		console.log('\n', filepath + ' was changed with extenstion', ext[0]);
+
+		switch (ext[0]) {
+		case '.js':
+			refresh();
+			break;
+		case '.css':
+			refreshCSS();
+			break;
+		}
+	});
+});
+
 // CLI
 
 var isWaiting = false,
@@ -32,8 +61,9 @@ var isWaiting = false,
 	interval;
 
 server.subscribe(function (message) {
-	console.log('received:', message);
-	isWaiting = false;
+	console.log('>>>>> [ received ]', message);
+	cancelWaiting();
+	asyncPrompt();
 });
 
 function showHelp() {
@@ -51,10 +81,23 @@ function showHelp() {
 	console.log();
 }
 
+function refresh() {
+	server.command('refresh', {});
+}
+
+function refreshCSS() {
+	server.command('refreshCSS', {});
+}
+
 function asyncPrompt() {
 	process.nextTick(function () {
 		prompt();
 	});
+}
+
+function cancelWaiting() {
+	clearInterval(interval);
+	isWaiting = false;
 }
 
 function prompt(first) {
@@ -85,13 +128,13 @@ function prompt(first) {
 			break;
 
 		case 'refresh':
-			server.command('refresh', {});
+			refresh();
 			//isWaiting = true;
 			//commandDate = Date.now();
 			break;
 
 		case 'refreshCSS':
-			server.command('refreshCSS', { files: parts });
+			refreshCSS();
 			//isWaiting = true;
 			//commandDate = Date.now();
 			break;
@@ -106,11 +149,7 @@ function prompt(first) {
 			interval = setInterval(function () {
 				if (!isWaiting || Date.now() - commandDate > 5 * 1000) {
 					process.stdout.write(' timeout\n');
-
-					clearInterval(interval);
-					isWaiting = false;
-
-					asyncPrompt();
+					cancelWaiting();
 				} else {
 					process.stdout.write('.');
 				}
