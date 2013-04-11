@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+
+var program = require('commander'),
+	server = require('../src/server'),
+	pkg = require('../package.json');
+
+function list(val) {
+	return val.split(' ');
+}
+
+program
+	.version(pkg.version)
+	.usage('[options]')
+	.option('-p, --port <n>', 'set up server port', parseInt)
+	.option('-w, --watch <files>', 'files and directories to watch', list)
+	.parse(process.argv);
+
+if (program.port) {
+	console.log('Port: %d', program.port);
+}
+
+if (program.watch) {
+	console.log('Files:', program.watch);
+}
+
+server.listen(program.port);
+
+// CLI
+
+var isWaiting = false,
+	commandDate = 0,
+	interval;
+
+server.subscribe(function (message) {
+	console.log('received:', message);
+	isWaiting = false;
+});
+
+function showHelp() {
+	console.log();
+	console.log('  Special commands:');
+	console.log();
+	console.log('    :quit                 close application');
+	console.log('    :help                 show help');
+	console.log();
+	console.log('  Regular commands:');
+	console.log();
+	console.log('    eval <command>        evaluate command on active web pages and return replay');
+	console.log('    refresh               reload active web pages');
+	console.log('    refreshCSS [<files>]  reload only selected CSS files');
+	console.log();
+}
+
+function asyncPrompt() {
+	process.nextTick(function () {
+		prompt();
+	});
+}
+
+function prompt(first) {
+	if (first) {
+		console.log();
+		console.log('To get some help type :help');
+	}
+
+	program.prompt('respond> ', function (command) {
+		var parts = list(command),
+			cmd = parts.shift();
+
+		switch (cmd) {
+			case ':quit':
+				server.close(function () {
+					process.exit();
+				});
+				break;
+
+			case ':help':
+				showHelp();
+				break;
+
+			case 'eval':
+				server.command('eval', { data: parts.join(' ') });
+				isWaiting = true;
+				commandDate = Date.now();
+				break;
+
+			case 'refresh':
+				server.command('refresh', {});
+				isWaiting = true;
+				commandDate = Date.now();
+				break;
+
+			case 'refreshCSS':
+				server.command('refreshCSS', { files: parts });
+				isWaiting = true;
+				commandDate = Date.now();
+				break;
+
+			default:
+				console.log('Unknown command');
+				break;
+		}
+
+		if (isWaiting) {
+			// @TODO replace with setTimeout
+			interval = setInterval(function() {
+				if (!isWaiting || Date.now() - commandDate > 5*1000) {
+					process.stdout.write(' timeout\n');
+
+					clearInterval(interval);
+					isWaiting = false;
+
+					asyncPrompt();
+				} else {
+					process.stdout.write('.');
+				}
+			}, 1000);
+			return;
+		}
+
+		asyncPrompt();
+	});	
+}
+
+// Start!
+
+prompt(true);
