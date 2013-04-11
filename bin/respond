@@ -68,43 +68,43 @@ function prompt(first) {
 			cmd = parts.shift();
 
 		switch (cmd) {
-			case ':quit':
-				server.close(function () {
-					process.exit();
-				});
-				break;
+		case ':quit':
+			server.close(function () {
+				process.exit();
+			});
+			break;
 
-			case ':help':
-				showHelp();
-				break;
+		case ':help':
+			showHelp();
+			break;
 
-			case 'eval':
-				server.command('eval', { data: parts.join(' ') });
-				isWaiting = true;
-				commandDate = Date.now();
-				break;
+		case 'eval':
+			server.command('eval', { data: parts.join(' ') });
+			isWaiting = true;
+			commandDate = Date.now();
+			break;
 
-			case 'refresh':
-				server.command('refresh', {});
-				isWaiting = true;
-				commandDate = Date.now();
-				break;
+		case 'refresh':
+			server.command('refresh', {});
+			//isWaiting = true;
+			//commandDate = Date.now();
+			break;
 
-			case 'refreshCSS':
-				server.command('refreshCSS', { files: parts });
-				isWaiting = true;
-				commandDate = Date.now();
-				break;
+		case 'refreshCSS':
+			server.command('refreshCSS', { files: parts });
+			//isWaiting = true;
+			//commandDate = Date.now();
+			break;
 
-			default:
-				console.log('Unknown command');
-				break;
+		default:
+			console.log('Unknown command');
+			break;
 		}
 
 		if (isWaiting) {
 			// @TODO replace with setTimeout
-			interval = setInterval(function() {
-				if (!isWaiting || Date.now() - commandDate > 5*1000) {
+			interval = setInterval(function () {
+				if (!isWaiting || Date.now() - commandDate > 5 * 1000) {
 					process.stdout.write(' timeout\n');
 
 					clearInterval(interval);

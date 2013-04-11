@@ -10,6 +10,7 @@
   "dependencies": {
     "faye": "~0.8.9",
     "express": "~3.1.1",
+    "ejs": "~0.8.3",
     "commander": "~0.6.1",
     "underscore": "~1.4.4"
   },

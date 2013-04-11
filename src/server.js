@@ -4,18 +4,33 @@ var http = require('http'),
 	_ = require('underscore'),
 	app,
 	server,
-	bayeux,
-	client,
-	isSubscribed = false;
+	bayeux;
 
 function initPubSub() {
 	bayeux = new faye.NodeAdapter({ mount: '/pub', timeout: 45 });
+
+	bayeux.bind('handshake', function (clientId) {
+		console.log('New client connected', clientId);
+	});
+
+	bayeux.bind('subscribe', function (clientId, channel) {
+		console.log('New subscription to channel', channel, '[', clientId, ']');
+	});
+
+	bayeux.bind('publish', function (clientId, channel, data) {
+		console.log('Client', clientId, 'published to channel', channel, 'with data', data);
+	});
+
+	bayeux.bind('disconnect ', function (clientId) {
+		console.log('Client disconnected', clientId);
+	});
+
 	bayeux.attach(server);
 }
 
 function noop() {}
 
-module.exports = {
+var Server = {
 	get server() {
 		return server;
 	},
@@ -29,8 +44,19 @@ module.exports = {
 
 		app = express();
 
-		app.get('*', function (req, res) {
-			res.end('hello');
+		// Config
+		app.engine('html', require('ejs').__express);
+		app.set('views', __dirname + '/views');
+		app.set('view engine', 'html');
+
+		// Middleware
+		app.use(express.bodyParser());
+		app.use(express.methodOverride());
+		app.use(express.static(__dirname + '/../public'));
+
+		// Routes
+		app.get('/test', function (req, res) {
+			res.render('index');
 		});
 
 		server = http.createServer(app);
@@ -45,7 +71,6 @@ module.exports = {
 		if (!server) {
 			console.warn('There is no active server.');
 		}
-
 		server.close(typeof callback === 'function' ? callback : noop);
 	},
 
@@ -70,3 +95,5 @@ module.exports = {
 		bayeux.getClient().subscribe('/call/result', callback);
 	}
 };
+
+module.exports = Server;
