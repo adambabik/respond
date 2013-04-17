@@ -20,39 +20,39 @@ if (program.port) {
 	console.log('Port: %d', program.port);
 }
 
-if (program.watch) {
-	console.log('Files:', program.watch);
-}
-
 server.listen(program.port);
 
 // Watch
 
-gaze(program.watch, function (err) {
-	if (err) {
-		console.log('Error while watching', err);
-		return;
-	}
-	
-	this.on('changed', function (filepath) {
-		var ext = filepath.match(/\.\w+$/i);
-		
-		if (!ext) {
+if (program.watch) {
+	console.log('Files:', program.watch);
+
+	gaze(program.watch, function (err) {
+		if (err) {
+			console.log('Error while watching', err);
 			return;
 		}
+		
+		this.on('changed', function (filepath) {
+			var ext = filepath.match(/\.\w+$/i);
+			
+			if (!ext) {
+				return;
+			}
 
-		console.log('\n', filepath + ' was changed with extenstion', ext[0]);
+			console.log('\n', filepath + ' was changed with extenstion', ext[0]);
 
-		switch (ext[0]) {
-		case '.js':
-			refresh();
-			break;
-		case '.css':
-			refreshCSS();
-			break;
-		}
+			switch (ext[0]) {
+			case '.js':
+				refresh();
+				break;
+			case '.css':
+				refreshCSS();
+				break;
+			}
+		});
 	});
-});
+}
 
 // CLI
 
