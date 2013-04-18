@@ -2,35 +2,23 @@ var http = require('http'),
 	faye = require('faye'),
 	express = require('express'),
 	_ = require('underscore'),
-	app,
-	server,
-	bayeux;
+	debug = require('./debug');
 
-function initPubSub() {
-	bayeux = new faye.NodeAdapter({ mount: '/pub', timeout: 45 });
-
-	bayeux.bind('handshake', function (clientId) {
-		console.log('New client connected', clientId);
-	});
-
-	bayeux.bind('subscribe', function (clientId, channel) {
-		console.log('New subscription to channel', channel, '[', clientId, ']');
-	});
-
-	bayeux.bind('publish', function (clientId, channel, data) {
-		console.log('Client', clientId, 'published to channel', channel, 'with data', data);
-	});
-
-	bayeux.bind('disconnect ', function (clientId) {
-		console.log('Client disconnected', clientId);
-	});
-
-	bayeux.attach(server);
-}
+// Utility methods
 
 function noop() {}
 
-var Server = {
+// Server module variables
+
+var app, server, bayeux;
+
+// Server
+
+function Server() {}
+
+Server.prototype = {
+	constructor: Server,
+
 	get server() {
 		return server;
 	},
@@ -40,7 +28,9 @@ var Server = {
 			return;
 		}
 
-		typeof port === 'number' || (port = 3000);
+		if (typeof port !== 'number') {
+			throw new Error('port must be a number');
+		}
 
 		app = express();
 
@@ -61,26 +51,51 @@ var Server = {
 
 		server = http.createServer(app);
 
-		initPubSub();
+		this._initPubSub();
 
+		// Listen
 		server.listen(port);
-		console.log('Listen on port %d', port);
+		debug.debug() && console.log('Listen on port %d', port);
+	},
+
+	_initPubSub: function _initPubSub() {
+		bayeux = new faye.NodeAdapter({ mount: '/pub', timeout: 45 });
+
+		bayeux.bind('handshake', function (clientId) {
+			debug.debug() && console.log('New client connected', clientId);
+		});
+
+		bayeux.bind('subscribe', function (clientId, channel) {
+			debug.debug() && console.log('New subscription to channel', channel, '[', clientId, ']');
+		});
+
+		bayeux.bind('publish', function (clientId, channel, data) {
+			debug.debug() && console.log('Client', clientId, 'published to channel', channel, 'with data', data);
+		});
+
+		bayeux.bind('disconnect', function (clientId) {
+			debug.debug() && console.log('Client disconnected', clientId);
+		});
+
+		bayeux.attach(server);
 	},
 
 	close: function close(callback) {
 		if (!server) {
 			console.warn('There is no active server.');
 		}
-		server.close(typeof callback === 'function' ? callback : noop);
+
+		server.close(_.isFunction(callback) ? callback : noop);
 	},
 
 	attach: function attach(existingServer) {
 		if (server) {
+			console.warn('Server already exists.');
 			return;
 		}
 
 		server = existingServer;
-		initPubSub();
+		this._initPubSub();
 	},
 
 	command: function command(cmd, data) {
@@ -96,4 +111,4 @@ var Server = {
 	}
 };
 
-module.exports = Server;
+module.exports = new Server();

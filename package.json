@@ -1,7 +1,7 @@
 {
   "name": "respond",
   "version": "0.0.1",
-  "description": "Library to communicate with a web page front-end.",
+  "description": "JavaScript library to communicate with a web page front-end.",
   "main": "index.js",
   "preferGlobal": "true",
   "bin": {

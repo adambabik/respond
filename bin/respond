@@ -2,69 +2,81 @@
 
 var program = require('commander'),
 	server = require('../src/server'),
-	pkg = require('../package.json'),
-	gaze = require('gaze');
+	watcher = require('../src/watcher'),
+	debug = require('../src/debug'),
+	pkg = require('../package.json');
 
 function list(val) {
 	return val.split(' ');
 }
+
+function actions(val) {
+	return val.split(' ').reduce(function (prev, item) {
+		var tuple = item.split('=');
+		prev[tuple[0]] = tuple[1];
+		return prev;
+	}, {});
+}
+
+var options = {
+	port: 3000,
+	watch: [],
+	action: {
+		'js': 'refresh',
+		'css': 'refreshCSS'
+	},
+	exclude: []
+};
 
 program
 	.version(pkg.version)
 	.usage('[options]')
 	.option('-p, --port <n>', 'set up server port', parseInt)
 	.option('-w, --watch <files>', 'files and directories to watch', list)
+	.option('-a, --actions <actions>', 'actions to execute after file change, e.g. js=refresh means that after change is JavaScript file, refresh command is sent', actions)
+	.option('-e, --exclude <files>', 'excludes files from being observed', list)
+	.option('-d, --debug', 'turns on debug logs to STDOUT', Boolean)
 	.parse(process.argv);
 
-if (program.port) {
-	console.log('Port: %d', program.port);
+if (program.debug) {
+	debug.debug(program.debug);
 }
 
-server.listen(program.port);
+if (program.port) {
+	options.port = program.port;
+	debug.debug() && console.log('Port: %d', program.port);
+}
+
+if (program.watch) {
+	options.watch = program.watch;
+	debug.debug() && console.log('Watching files:', program.watch);
+}
+
+if (program.actions) {
+	options.action = program.actions;
+	debug.debug() && console.log('Actions:', program.actions);
+}
+
+if (program.exclude) {
+	options.exclude = program.exclude;
+	debug.debug() && console.log('Exclude:', program.exclude);	
+}
+
+// Server
+
+server.listen(options.port);
 
 // Watch
 
-if (program.watch) {
-	console.log('Files:', program.watch);
-
-	gaze(program.watch, function (err) {
-		if (err) {
-			console.log('Error while watching', err);
-			return;
-		}
-		
-		this.on('changed', function (filepath) {
-			var ext = filepath.match(/\.\w+$/i);
-			
-			if (!ext) {
-				return;
-			}
-
-			console.log('\n', filepath + ' was changed with extenstion', ext[0]);
-
-			switch (ext[0]) {
-			case '.js':
-				refresh();
-				break;
-			case '.css':
-				refreshCSS();
-				break;
-			}
-		});
-	});
+if (program.watch && program.watch.length > 0) {
+	watcher.watch(options.watch, options.exclude, options.action);
 }
 
 // CLI
 
 var isWaiting = false,
-	commandDate = 0,
-	interval;
-
-server.subscribe(function (message) {
-	console.log('>>>>> [ received ]', message);
-	cancelWaiting();
-	asyncPrompt();
-});
+	commandDate = -1,
+	interval = -1;
 
 function showHelp() {
 	console.log();
@@ -81,14 +93,6 @@ function showHelp() {
 	console.log();
 }
 
-function refresh() {
-	server.command('refresh', {});
-}
-
-function refreshCSS() {
-	server.command('refreshCSS', {});
-}
-
 function asyncPrompt() {
 	process.nextTick(function () {
 		prompt();
@@ -100,10 +104,17 @@ function cancelWaiting() {
 	isWaiting = false;
 }
 
+// Subscribe on messages from clients
+
+server.subscribe(function (message) {
+	debug.debug() && console.log('>>> [ received ]', message);
+	cancelWaiting();
+	asyncPrompt();
+});
+
 function prompt(first) {
 	if (first) {
-		console.log();
-		console.log('To get some help type :help');
+		console.log('\nTo get some help type :help');
 	}
 
 	program.prompt('respond> ', function (command) {
@@ -121,26 +132,8 @@ function prompt(first) {
 			showHelp();
 			break;
 
-		case 'eval':
-			server.command('eval', { data: parts.join(' ') });
-			isWaiting = true;
-			commandDate = Date.now();
-			break;
-
-		case 'refresh':
-			refresh();
-			//isWaiting = true;
-			//commandDate = Date.now();
-			break;
-
-		case 'refreshCSS':
-			refreshCSS();
-			//isWaiting = true;
-			//commandDate = Date.now();
-			break;
-
 		default:
-			console.log('Unknown command');
+			server.command(cmd, { data: parts.join(' ') });
 			break;
 		}
 
@@ -154,10 +147,9 @@ function prompt(first) {
 					process.stdout.write('.');
 				}
 			}, 1000);
-			return;
+		} else {
+			asyncPrompt();
 		}
-
-		asyncPrompt();
 	});	
 }
 
