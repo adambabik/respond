@@ -7,14 +7,16 @@
         "describe": false,
         "expect": false,
         "beforeEach": false,
+        "afterEach": false,
         "waits": false,
         "waitsFor": false,
         "runs": false
     },
 
-    "node" : true,
-    "es5" : true,
-    "browser" : true,
+    "node": true,
+    "es5": true,
+    "esnext": true,
+    "browser": true,
 
     "boss" : true,
     "curly": false,
@@ -30,13 +32,13 @@
     "noempty": false,
     "nonew": false,
     "nomen": false,
-    "onevar": true,
+    "onevar": false,
     "plusplus": false,
     "regexp": false,
     "undef": true,
     "sub": true,
     "strict": false,
     "white": true,
-    "unused": true,
+    "unused": false,
     "expr": true
 }

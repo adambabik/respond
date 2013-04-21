@@ -1,56 +1,62 @@
 var util = require('util'),
-	gaze = require('gaze'),
+	path = require('path'),
+	Gaze = require('gaze').Gaze,
 	_ = require('underscore'),
-	server = require('./server'),
-	debug = require('./debug'),
+	Debug = require('./debug'),
 	EventEmitter = require('events').EventEmitter;
 
 function Watcher() {
 	EventEmitter.call(this);
-	this.watcher = null;
+	this._watcher = null;
 }
 
 util.inherits(Watcher, EventEmitter);
 
 _.extend(Watcher.prototype, {
-	watch: function watch(files, exclude, action) {
+	watcher: function watcher() {
+		return this._watcher;
+	},
+
+	watch: function watch(files, exclude) {
 		var self = this;
 
-		gaze(files, function (err, watcher) {
+		this._watcher = new Gaze(files, function (err, watcher) {
 			if (err) {
 				console.error('Error while watching', err);
+				self.emit('error', err);
 				return;
 			}
 
-			self.watcher = watcher;
-			self.exclude();
-			
-			this.on('changed', function (filepath) {
-				var match = filepath.match(/\.(\w+)$/i),
-					ext = match && match.length > 1 ? match[1] : null;
-				
-				debug.debug() && console.log('\n', filepath + ' was changed with extension', ext);
+			if (exclude) {
+				this.remove(exclude);
+			}
 
-				if (!match) {
-					return;
-				}
+			Debug.debug() && console.log('[ watcher ] started watching files:', this.relative());
 
-				server.command(action[ext], {});
+			this.on('error', function (err) {
+				console.error('[ watcher ] error while watching files' + err);
+				self.emit('error', err);
+			});
+
+			this.on('end', function () {
+				self.emit('end');
+			});
+
+			this.on('all', function (event, filepath) {
+				Debug.debug() && console.log('[ watcher ]', filepath + ' was ' + event);
+
+				self.emit('changed', {
+					filepath: filepath,
+					ext: path.extname(filepath).replace('.', ''),
+					status: event
+				});
 			});
 		});
 	},
 
-	exclude: function exclude(files) {
-		var self = this;
-
-		if (!_.isArray(files)) {
-			files = [files];
-		}
-
-		files.forEach(function (file) {
-			self.watcher.remove(file);
-		});
+	close: function close() {
+		this._watcher.close();
 	}
 });
 
-module.exports = new Watcher();
+module.exports = Watcher;
