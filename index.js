@@ -1,5 +1,6 @@
 var PubSub = require('./src/pubsub'),
 	Watcher = require('./src/watcher'),
+	Server = require('./src/server'),
 	_ = require('underscore');
 
 var defaults = {
@@ -21,7 +22,8 @@ function Respond(options) {
 	var opts = this.options = _.extend({}, defaults, options);
 
 	this.pubsub = new PubSub(opts.port);
-	this._handleStatic();
+
+	Server.init(this.pubsub.getHttpServer());
 
 	if (opts.files.length) {
 		this.watch(opts.files, opts.exclude);
@@ -30,10 +32,6 @@ function Respond(options) {
 
 Respond.prototype = {
 	constructor: Respond,
-
-	_handleStatic: function _handleStatic() {
-
-	},
 
 	watch: function watch(files, exclude) {
 		var self = this;

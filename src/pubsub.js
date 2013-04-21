@@ -1,20 +1,22 @@
 var util = require('util'),
 	faye = require('faye'),
 	_ = require('underscore'),
-	express = require('express'),
 	EventEmitter = require('events').EventEmitter,
 	Debug = require('./debug');
 
 function PubSub(port) {
 	EventEmitter.call(this);
 	this._server = null;
-	this.app = null;
 	this._initialize(port);
 }
 
 util.inherits(PubSub, EventEmitter);
 
 _.extend(PubSub.prototype, {
+
+	getHttpServer: function getServer() {
+		return this._server._httpServer;
+	},
 
 	_initialize: function _initialize(port) {
 		var server = this._server = new faye.NodeAdapter({ mount: '/pub', timeout: 5 });
@@ -54,12 +56,6 @@ _.extend(PubSub.prototype, {
 
 	getClient: function getClient() {
 		return this._server.getClient();
-	},
-
-	getApp: function getApp() {
-
-
-		this.app = express();
 	}
 
 	// @TODO: what about unsubscribe method?
