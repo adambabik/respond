@@ -1,39 +1,31 @@
 var PubSub = require('../src/pubsub'),
-	Server = require('../src/server'),
 	faye = require('faye');
 
-const PORT = 8009;
+const PORT = 8011;
 
-var server, pubsub;
+var pubsub;
 
 beforeEach(function () {
-	server = new Server();
-	server.listen(PORT);
-
-	pubsub = new PubSub(server.httpServer);
+	pubsub = new PubSub(PORT);
 });
 
 afterEach(function () {
-	server.close();
+	pubsub.stop();
 });
 
 describe('pubsub', function () {
 	it("should pass message correctly", function (done) {
-		var client = new faye.Client('http://localhost:' + PORT + '/pub', { timeout: 4 });
-		client.disable('websocket');
+		var client = new faye.Client('http://localhost:' + PORT + '/pub', { timeout: 5 });
 
 		var subscription = client.subscribe('/test', function (message) {
-			if (message.test) {
-				subscription.cancel();
-				client.disconnect();
-				pubsub.getClient().disconnect();
-				done();
-			}
+			expect(message.test).toBeTruthy();
+			pubsub.getClient().disconnect();
+			client.disconnect();
+			done();
 		});
 
 		subscription.callback(function () {
 			pubsub.publish('/test', { test: true });
-			console.log('>>>>>', client._transport.connectionType);
 		});
 	});
 });

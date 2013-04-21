@@ -5,19 +5,20 @@ var util = require('util'),
 	Debug = require('./debug'),
 	EventEmitter = require('events').EventEmitter;
 
-function Watcher() {
+function Watcher(files, exclude) {
 	EventEmitter.call(this);
 	this._watcher = null;
+	this._watch(files, exclude);
 }
 
 util.inherits(Watcher, EventEmitter);
 
 _.extend(Watcher.prototype, {
-	watcher: function watcher() {
+	getWatcher: function getWatcher() {
 		return this._watcher;
 	},
 
-	watch: function watch(files, exclude) {
+	_watch: function _watch(files, exclude) {
 		var self = this;
 
 		this._watcher = new Gaze(files, function (err, watcher) {

@@ -35,10 +35,7 @@ fs.writeFileSync(file2, '');
 describe('watcher', function () {
 
 	beforeEach(function () {
-		watcherInstance = new Watcher();
-
-		// watch and exclude files
-		watcherInstance.watch(directory + '/*.*', path.resolve('tmp', 'file2.html'));
+		watcherInstance = new Watcher(directory + '/*.*', path.resolve('tmp', 'file2.html'));
 	});
 
 	afterEach(function () {

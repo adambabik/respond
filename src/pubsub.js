@@ -1,63 +1,65 @@
 var util = require('util'),
 	faye = require('faye'),
 	_ = require('underscore'),
+	express = require('express'),
 	EventEmitter = require('events').EventEmitter,
 	Debug = require('./debug');
 
-// Module variables
-
-var bayeux = null;
-
-// Module definition
-
-function PubSub(server) {
+function PubSub(port) {
 	EventEmitter.call(this);
-	this.server = server;
-
-	this._init();
+	this._server = null;
+	this.app = null;
+	this._initialize(port);
 }
 
 util.inherits(PubSub, EventEmitter);
 
 _.extend(PubSub.prototype, {
-	_init: function init() {
-		bayeux = new faye.NodeAdapter({ mount: '/pub', timeout: 45 });
 
-		bayeux.bind('handshake', function (clientId) {
+	_initialize: function _initialize(port) {
+		var server = this._server = new faye.NodeAdapter({ mount: '/pub', timeout: 5 });
+
+		server.bind('handshake', function (clientId) {
 			Debug.debug() && console.log('New client connected', clientId);
 		});
 
-		bayeux.bind('subscribe', function (clientId, channel) {
+		server.bind('subscribe', function (clientId, channel) {
 			Debug.debug() && console.log('New subscription to channel', channel, '[', clientId, ']');
 		});
 
-		bayeux.bind('publish', function (clientId, channel, data) {
+		server.bind('publish', function (clientId, channel, data) {
 			Debug.debug() && console.log('Client', clientId, 'published to channel', channel, 'with data', data);
 		});
 
-		bayeux.bind('disconnect', function (clientId) {
+		server.bind('disconnect', function (clientId) {
 			Debug.debug() && console.log('Client disconnected', clientId);
 		});
 
-		bayeux.attach(this.server);
+		server.listen(port);
 
 		return this;
 	},
 
 	publish: function publish(channel, data) {
-		bayeux.getClient().publish(channel, data);
+		this._server.getClient().publish(channel, data);
 	},
 
 	subscribe: function subscribe(channel, callback) {
-		bayeux.getClient().subscribe(channel, callback);
+		this._server.getClient().subscribe(channel, callback);
 	},
 
 	stop: function stop() {
-		bayeux.stop();
+		this._server.stop();
 	},
 
 	getClient: function getClient() {
-		return bayeux.getClient();
+		return this._server.getClient();
+	},
+
+	getApp: function getApp() {
+
+
+		this.app = express();
 	}
 
 	// @TODO: what about unsubscribe method?

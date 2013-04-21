@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 var program = require('commander'),
-	server = require('../src/server'),
-	watcher = require('../src/watcher'),
-	debug = require('../src/debug'),
+	Respond = require('../index'),
+	Debug = require('../src/debug'),
 	pkg = require('../package.json');
 
 function list(val) {
@@ -18,15 +17,7 @@ function actions(val) {
 	}, {});
 }
 
-var options = {
-	port: 3000,
-	watch: [],
-	action: {
-		'js': 'refresh',
-		'css': 'refreshCSS'
-	},
-	exclude: []
-};
+var options = {};
 
 program
 	.version(pkg.version)
@@ -39,38 +30,32 @@ program
 	.parse(process.argv);
 
 if (program.debug) {
-	debug.debug(program.debug);
+	Debug.debug(program.debug);
 }
 
 if (program.port) {
 	options.port = program.port;
-	debug.debug() && console.log('Port: %d', program.port);
+	Debug.debug() && console.log('Port: %d', program.port);
 }
 
 if (program.watch) {
 	options.watch = program.watch;
-	debug.debug() && console.log('Watching files:', program.watch);
+	Debug.debug() && console.log('Watching files:', program.watch);
 }
 
 if (program.actions) {
-	options.action = program.actions;
-	debug.debug() && console.log('Actions:', program.actions);
+	options.actions = program.actions;
+	Debug.debug() && console.log('Actions:', program.actions);
 }
 
 if (program.exclude) {
 	options.exclude = program.exclude;
-	debug.debug() && console.log('Exclude:', program.exclude);
+	Debug.debug() && console.log('Exclude:', program.exclude);
 }
 
 // Server
 
-server.listen(options.port);
-
-// Watch
-
-if (program.watch && program.watch.length > 0) {
-	watcher.watch(options.watch, options.exclude, options.action);
-}
+var respond = new Respond(options);
 
 // CLI
 
@@ -106,8 +91,8 @@ function cancelWaiting() {
 
 // Subscribe on messages from clients
 
-server.subscribe(function (message) {
-	debug.debug() && console.log('>>> [ received ]', message);
+respond.pubsub.subscribe(function (message) {
+	Debug.debug() && console.log('>>> [ received ]', message);
 	cancelWaiting();
 	asyncPrompt();
 });
@@ -123,8 +108,9 @@ function prompt(first) {
 
 		switch (cmd) {
 		case ':quit':
-			server.close(function () {
-				process.exit();
+			respond.pubsub.stop();
+			process.nextTick(function () {
+				process.exit(0);
 			});
 			break;
 
@@ -133,7 +119,7 @@ function prompt(first) {
 			break;
 
 		default:
-			server.command(cmd, { data: parts.join(' ') });
+			respond.execute(cmd, parts.join(' '));
 			break;
 		}
 
