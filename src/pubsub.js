@@ -4,58 +4,55 @@ var util = require('util'),
 	EventEmitter = require('events').EventEmitter,
 	Debug = require('./debug');
 
-function PubSub(port) {
+function PubSub(server) {
 	EventEmitter.call(this);
-	this._server = null;
-	this._initialize(port);
+	this._server = server;
+	this._pubsub = null;
+	this._initialize(server);
 }
 
 util.inherits(PubSub, EventEmitter);
 
 _.extend(PubSub.prototype, {
 
-	getHttpServer: function getServer() {
-		return this._server._httpServer;
-	},
+	_initialize: function _initialize(server) {
+		var pubsub = this._pubsub = new faye.NodeAdapter({ mount: '/pub', timeout: 5 });
 
-	_initialize: function _initialize(port) {
-		var server = this._server = new faye.NodeAdapter({ mount: '/pub', timeout: 5 });
-
-		server.bind('handshake', function (clientId) {
+		pubsub.bind('handshake', function (clientId) {
 			Debug.debug() && console.log('New client connected', clientId);
 		});
 
-		server.bind('subscribe', function (clientId, channel) {
+		pubsub.bind('subscribe', function (clientId, channel) {
 			Debug.debug() && console.log('New subscription to channel', channel, '[', clientId, ']');
 		});
 
-		server.bind('publish', function (clientId, channel, data) {
+		pubsub.bind('publish', function (clientId, channel, data) {
 			Debug.debug() && console.log('Client', clientId, 'published to channel', channel, 'with data', data);
 		});
 
-		server.bind('disconnect', function (clientId) {
+		pubsub.bind('disconnect', function (clientId) {
 			Debug.debug() && console.log('Client disconnected', clientId);
 		});
 
-		server.listen(port);
+		pubsub.attach(server);
 
 		return this;
 	},
 
 	publish: function publish(channel, data) {
-		this._server.getClient().publish(channel, data);
+		this._pubsub.getClient().publish(channel, data);
 	},
 
 	subscribe: function subscribe(channel, callback) {
-		this._server.getClient().subscribe(channel, callback);
+		this._pubsub.getClient().subscribe(channel, callback);
 	},
 
 	stop: function stop() {
-		this._server.stop();
+		this._pubsub.stop();
 	},
 
 	getClient: function getClient() {
-		return this._server.getClient();
+		return this._pubsub.getClient();
 	}
 
 	// @TODO: what about unsubscribe method?

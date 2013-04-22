@@ -1,4 +1,4 @@
-(function (__global__, Faye) {
+;(function (__global__, Faye) {
 	'use strict';
 
 	var slice = Array.prototype.slice;
@@ -42,7 +42,7 @@
 		this.client.subscribe('/call', function (message) {
 			console.log('[ call ]', message);
 			switch (message.cmd) {
-			case 'refresh': 
+			case 'refresh':
 				self.refresh();
 				break;
 			case 'refreshCSS':

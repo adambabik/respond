@@ -15,15 +15,10 @@ var defaults = {
 };
 
 function Respond(options) {
-	this.options = null;
-	this.pubsub = null;
-	this.watcher = null;
-
 	var opts = this.options = _.extend({}, defaults, options);
 
-	this.pubsub = new PubSub(opts.port);
-
-	Server.init(this.pubsub.getHttpServer());
+	this.server = new Server(opts.port);
+	this.pubsub = new PubSub(this.server.getHttpServer());
 
 	if (opts.files.length) {
 		this.watch(opts.files, opts.exclude);
@@ -38,9 +33,12 @@ Respond.prototype = {
 
 		if (this.watcher) {
 			this.watcher.getWatcher().add(files);
-			exclude && this.watcher.getWatcher().remove(exclude);
+
+			if (exclude) {
+				this.watcher.getWatcher().remove(exclude);
+			}
 		} else {
-			this.watcher = new Watcher(this.options.files, this.options.exclude);
+			this.watcher = new Watcher(files, exclude);
 
 			this.watcher.on('changed', function (event) {
 				Object.keys(this.options.actions).forEach(function (arr, action) {

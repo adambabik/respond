@@ -1,32 +1,46 @@
-var express = require('express');
+var express = require('express'),
+	http = require('http'),
+	Debug = require('./debug');
 
-var Server = {
-	server: null,
-	app: null,
+function Server(port) {
+	// express
 
-	init: function init(httpServer) {
-		this.server = httpServer;
-		this.app = express();
+	this.app = express();
+	this._configApp(this.app);
+
+	// HTTP server
+
+	this._httpServer = http.createServer(this.app);
+	this._httpServer.listen(port);
+
+	Debug.debug() && console.log('Server listens on %d', port);
+}
+
+Server.prototype = {
+	constructor: Server,
+
+	getHttpServer: function getHttpServer() {
+		return this._httpServer;
 	},
 
-	_handleStatic: function _handleStatic() {
-		var app = this.app;
-
+	_configApp: function _configApp(app) {
 		// Config
 
-		// @TODO: it goes to dashboard
-
-		// app.engine('html', require('ejs').__express);
-		// app.set('views', __dirname + '/views');
-		// app.set('view engine', 'html');
+		app.engine('html', require('ejs').__express);
+		app.set('views', __dirname + '/views');
+		app.set('view engine', 'html');
 
 		// Middleware
 
 		app.use(express.bodyParser());
 		app.use(express.methodOverride());
-		app.use(express.static(__dirname + '/../public'));
-	}
 
+		// Routes
+
+		app.get('/respond.js', function (req, res) {
+			res.status(200).sendfile('/browser/respond.js', { root: __dirname });
+		});
+	}
 };
 
 module.exports = Server;

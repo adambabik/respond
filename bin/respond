@@ -107,20 +107,20 @@ function prompt(first) {
 			cmd = parts.shift();
 
 		switch (cmd) {
-		case ':quit':
-			respond.pubsub.stop();
-			process.nextTick(function () {
-				process.exit(0);
-			});
-			break;
+			case ':quit':
+				respond.pubsub.stop();
+				process.nextTick(function () {
+					process.exit(0);
+				});
+				break;
 
-		case ':help':
-			showHelp();
-			break;
+			case ':help':
+				showHelp();
+				break;
 
-		default:
-			respond.execute(cmd, parts.join(' '));
-			break;
+			default:
+				respond.execute(cmd, parts.join(' '));
+				break;
 		}
 
 		if (isWaiting) {
