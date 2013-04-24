@@ -32,15 +32,20 @@
 			return new Respond(url);
 		}
 
-		this.url = url;
+		this.url = url + Respond.PATH;
 		this.client = null;
+
+		this._setup();
 	}
 
-	Respond.prototype.setup = function setup() {
+	Respond.PATH = '/pub';
+
+	Respond.prototype._setup = function _setup() {
 		var self = this;
 		this.client = new Respond.Client(this.url);
 		this.client.subscribe('/call', function (message) {
 			console.log('[ call ]', message);
+
 			switch (message.cmd) {
 			case 'refresh':
 				self.refresh();

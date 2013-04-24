@@ -1,7 +1,8 @@
 var PubSub = require('./src/pubsub'),
 	Watcher = require('./src/watcher'),
 	Server = require('./src/server'),
-	_ = require('underscore');
+	_ = require('underscore'),
+	debug = require('./src/debug')('index', true);
 
 var defaults = {
 	port: 8000,
@@ -25,6 +26,9 @@ function Respond(options) {
 	}
 }
 
+Respond.CALL_CHANNEL = '/call';
+Respond.RESULT_CHANNEL = '/call/result';
+
 Respond.prototype = {
 	constructor: Respond,
 
@@ -32,10 +36,10 @@ Respond.prototype = {
 		var self = this;
 
 		if (this.watcher) {
-			this.watcher.getWatcher().add(files);
+			this.watcher.add(files);
 
 			if (exclude) {
-				this.watcher.getWatcher().remove(exclude);
+				this.watcher.remove(exclude);
 			}
 		} else {
 			this.watcher = new Watcher(files, exclude);
@@ -50,8 +54,12 @@ Respond.prototype = {
 		}
 	},
 
-	execute: function execute(cmd, data) {
-		this.pubsub.publish('/call', { cmd: cmd, data: data });
+	command: function command(cmd, data) {
+		this.pubsub.publish(Respond.CALL_CHANNEL, { cmd: cmd, data: data });
+	},
+
+	execute: function execute(data) {
+		this.pubsub.publish(Respond.CALL_CHANNEL, { cmd: 'eval', data: data });
 	},
 
 	addFileAction: function addFileAction(ext, action) {

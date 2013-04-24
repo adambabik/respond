@@ -1,6 +1,6 @@
 var express = require('express'),
 	http = require('http'),
-	Debug = require('./debug');
+	debug = require('./debug')('server', true);
 
 function Server(port) {
 	// express
@@ -13,7 +13,7 @@ function Server(port) {
 	this._httpServer = http.createServer(this.app);
 	this._httpServer.listen(port);
 
-	Debug.debug() && console.log('Server listens on %d', port);
+	debug() && console.log('Server listens on %d', port);
 }
 
 Server.prototype = {
@@ -40,6 +40,10 @@ Server.prototype = {
 		app.get('/respond.js', function (req, res) {
 			res.status(200).sendfile('/browser/respond.js', { root: __dirname });
 		});
+	},
+
+	close: function close(callback) {
+		this._httpServer.close(callback);
 	}
 };
 

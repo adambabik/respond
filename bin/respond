@@ -2,8 +2,10 @@
 
 var program = require('commander'),
 	Respond = require('../index'),
-	Debug = require('../src/debug'),
+	debug = require('../src/debug')('respond'),
 	pkg = require('../package.json');
+
+debug(true);
 
 function list(val) {
 	return val.split(' ');
@@ -30,32 +32,37 @@ program
 	.parse(process.argv);
 
 if (program.debug) {
-	Debug.debug(program.debug);
+	debug(program.debug);
 }
 
 if (program.port) {
 	options.port = program.port;
-	Debug.debug() && console.log('Port: %d', program.port);
+	debug() && console.log('Port: %d', program.port);
 }
 
 if (program.watch) {
 	options.watch = program.watch;
-	Debug.debug() && console.log('Watching files:', program.watch);
+	debug() && console.log('Watching files:', program.watch);
 }
 
 if (program.actions) {
 	options.actions = program.actions;
-	Debug.debug() && console.log('Actions:', program.actions);
+	debug() && console.log('Actions:', program.actions);
 }
 
 if (program.exclude) {
 	options.exclude = program.exclude;
-	Debug.debug() && console.log('Exclude:', program.exclude);
+	debug() && console.log('Exclude:', program.exclude);
 }
 
 // Server
 
 var respond = new Respond(options);
+
+respond.pubsub.subscribe(Respond.RESULT_CHANNEL, function (message) {
+	debug() && console.log('>>> [ received ]', message);
+	cancelWaiting();
+});
 
 // CLI
 
@@ -89,14 +96,6 @@ function cancelWaiting() {
 	isWaiting = false;
 }
 
-// Subscribe on messages from clients
-
-respond.pubsub.subscribe(function (message) {
-	Debug.debug() && console.log('>>> [ received ]', message);
-	cancelWaiting();
-	asyncPrompt();
-});
-
 function prompt(first) {
 	if (first) {
 		console.log('\nTo get some help type :help');
@@ -108,8 +107,7 @@ function prompt(first) {
 
 		switch (cmd) {
 			case ':quit':
-				respond.pubsub.stop();
-				process.nextTick(function () {
+				respond.server.close(function () {
 					process.exit(0);
 				});
 				break;
@@ -119,7 +117,9 @@ function prompt(first) {
 				break;
 
 			default:
-				respond.execute(cmd, parts.join(' '));
+				if (cmd) {
+					respond.command(cmd, parts.join(' '));
+				}
 				break;
 		}
 

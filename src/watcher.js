@@ -2,8 +2,10 @@ var util = require('util'),
 	path = require('path'),
 	Gaze = require('gaze').Gaze,
 	_ = require('underscore'),
-	Debug = require('./debug'),
-	EventEmitter = require('events').EventEmitter;
+	EventEmitter = require('events').EventEmitter,
+	debug = require('./debug')('watcher');
+
+debug(true);
 
 function Watcher(files, exclude) {
 	EventEmitter.call(this);
@@ -14,10 +16,6 @@ function Watcher(files, exclude) {
 util.inherits(Watcher, EventEmitter);
 
 _.extend(Watcher.prototype, {
-	getWatcher: function getWatcher() {
-		return this._watcher;
-	},
-
 	_watch: function _watch(files, exclude) {
 		var self = this;
 
@@ -32,7 +30,7 @@ _.extend(Watcher.prototype, {
 				this.remove(exclude);
 			}
 
-			Debug.debug() && console.log('[ watcher ] started watching files:', this.relative());
+			debug() && console.log('[ watcher ] started watching files:', this.relative());
 
 			this.on('error', function (err) {
 				console.error('[ watcher ] error while watching files' + err);
@@ -44,7 +42,7 @@ _.extend(Watcher.prototype, {
 			});
 
 			this.on('all', function (event, filepath) {
-				Debug.debug() && console.log('[ watcher ]', filepath + ' was ' + event);
+				debug() && console.log('[ watcher ]', filepath + ' was ' + event);
 
 				self.emit('changed', {
 					filepath: filepath,
@@ -57,6 +55,14 @@ _.extend(Watcher.prototype, {
 
 	close: function close() {
 		this._watcher.close();
+	},
+
+	add: function add(files) {
+		this._watcher.add(files);
+	},
+
+	remove: function remove(files) {
+		this._watcher.remove(files);
 	}
 });
 
