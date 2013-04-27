@@ -1,7 +1,7 @@
 {
   "name": "respond",
-  "version": "0.0.1",
-  "description": "JavaScript library to communicate with a web page front-end.",
+  "version": "0.1.0",
+  "description": "Small JavaScript library which makes web development faster. It provides communication with a web page front-end via CLI, watching files and automatic refreshing.",
   "main": "index.js",
   "preferGlobal": "true",
   "bin": {
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": "",
+  "repository": "https://github.com/dreame4/respond.git",
   "author": "Adam Babik",
   "license": "BSD",
   "readmeFilename": "README.md"

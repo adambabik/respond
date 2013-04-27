@@ -1,12 +1,12 @@
-# Respond
+# respond
 
-JavaScript library to communicate with a web page front-end.
+Small JavaScript library which makes web development faster. It provides communication with a web page front-end via CLI, watching files and automatic refreshing.
 
 ## Features
 
-* evaluating arbitrary code on a web page font-end from command line
+* evaluating arbitrary code on a web page font-end using CLI or node application
+* watching files and responding to their changes
 * dedicated commands to refresh a web application or only CSS files
-* communicate with a web page front-end using CLI (Command Line Interface) or your own node.js application with respond library
 
 ## Installation
 
@@ -20,7 +20,7 @@ You may need to write `sudo` before the command in order to install it globally.
 
 ## CLI (Command Line Interface)
 
-Respond has a command line interface to interact with it without any other applications.
+respond has a command line interface to interact with it without any other applications.
 
 ### Usage
 
@@ -42,9 +42,9 @@ You can run CLI with several options:
 * `-e, --exclude file[, file ...]` - excludes files from being observed,
 * `-d, --debug` - prints debug logs to STDOUT.
 
-## Using Respond in node.js applications
+## Using respond in node.js applications
 
-Respond can be used in node.js applications. All you need to do is to install respond from NPM (see Installation) and require module in you app.
+respond can be used in node.js applications. All you need to do is to install respond from NPM (see Installation) and require module in you app.
 
 More details will come soon.
 
