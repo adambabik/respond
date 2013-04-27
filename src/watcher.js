@@ -5,8 +5,6 @@ var util = require('util'),
 	EventEmitter = require('events').EventEmitter,
 	debug = require('./debug')('watcher');
 
-debug(true);
-
 function Watcher(files, exclude) {
 	EventEmitter.call(this);
 	this._watcher = null;
@@ -30,10 +28,10 @@ _.extend(Watcher.prototype, {
 				this.remove(exclude);
 			}
 
-			debug() && console.log('[ watcher ] started watching files:', this.relative());
+			debug() && console.log('[LOG]'.grey, 'Started watching files:', this.relative());
 
 			this.on('error', function (err) {
-				console.error('[ watcher ] error while watching files' + err);
+				console.error('[ERR]'.red, 'while watching files' + err);
 				self.emit('error', err);
 			});
 
@@ -42,7 +40,7 @@ _.extend(Watcher.prototype, {
 			});
 
 			this.on('all', function (event, filepath) {
-				debug() && console.log('[ watcher ]', filepath + ' was ' + event);
+				debug() && console.log('[LOG]'.cyan, filepath + ' has been ' + event);
 
 				self.emit('changed', {
 					filepath: filepath,

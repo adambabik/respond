@@ -13,7 +13,8 @@
     "ejs": "~0.8.3",
     "commander": "~0.6.1",
     "underscore": "~1.4.4",
-    "gaze": "~0.3.3"
+    "gaze": "~0.3.3",
+    "colors": "~0.6.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -1,6 +1,6 @@
 var express = require('express'),
 	http = require('http'),
-	debug = require('./debug')('server', true);
+	debug = require('./debug')('server');
 
 function Server(port) {
 	// express
@@ -13,7 +13,7 @@ function Server(port) {
 	this._httpServer = http.createServer(this.app);
 	this._httpServer.listen(port);
 
-	debug() && console.log('Server listens on %d', port);
+	debug() && console.log('[LOG]'.grey, 'Server listens on ' + port);
 }
 
 Server.prototype = {

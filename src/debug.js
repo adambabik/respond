@@ -1,9 +1,9 @@
-var DEFAULT = false,
+var __default = false,
 	debugComponents = {};
 
 function setMode(component, value) {
 	return typeof value === 'undefined' ?
-		(component in debugComponents ? debugComponents[component] : DEFAULT) :
+		(component in debugComponents ? debugComponents[component] : __default) :
 		debugComponents[component] = value;
 }
 
@@ -12,5 +12,11 @@ module.exports = function (component, value) {
 	if (value) {
 		setMode(component, !!value);
 	}
-	return setMode.bind(null, component);
+
+	var fn = setMode.bind(null, component);
+	fn.default = function (val) {
+		return __default = val;
+	};
+
+	return fn;
 };

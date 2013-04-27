@@ -1,10 +1,9 @@
 var util = require('util'),
 	faye = require('faye'),
 	_ = require('underscore'),
+	colors = require('colors'),
 	EventEmitter = require('events').EventEmitter,
 	debug = require('./debug')('pubsub');
-
-debug(true);
 
 function PubSub(server) {
 	EventEmitter.call(this);
@@ -22,19 +21,19 @@ _.extend(PubSub.prototype, {
 		var pubsub = this._pubsub = new faye.NodeAdapter({ mount: '/pub', timeout: 5 });
 
 		pubsub.bind('handshake', function (clientId) {
-			debug() && console.log('New client connected', clientId);
+			debug() && console.log('[LOG]'.grey, 'New client connected', clientId);
 		});
 
 		pubsub.bind('subscribe', function (clientId, channel) {
-			debug() && console.log('New subscription to channel', channel, '[', clientId, ']');
+			debug() && console.log('[LOG]'.grey, 'New subscription to channel', channel, '[', clientId, ']');
 		});
 
 		pubsub.bind('publish', function (clientId, channel, data) {
-			debug() && console.log('Client', clientId, 'published to channel', channel, 'with data', data);
+			debug() && console.log('[LOG]'.grey, 'Client', clientId, 'published to channel', channel, 'with data', data);
 		});
 
 		pubsub.bind('disconnect', function (clientId) {
-			debug() && console.log('Client disconnected', clientId);
+			debug() && console.log('[LOG]'.grey, 'Client disconnected', clientId);
 		});
 
 		pubsub.attach(server);

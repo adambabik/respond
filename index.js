@@ -45,9 +45,10 @@ Respond.prototype = {
 			this.watcher = new Watcher(files, exclude);
 
 			this.watcher.on('changed', function (event) {
-				Object.keys(this.options.actions).forEach(function (arr, action) {
-					if (~arr.indexOf(event.ext)) {
-						self.execute(action);
+				var actions = self.options.actions;
+				Object.keys(actions).forEach(function (action, idx) {
+					if (~actions[action].indexOf(event.ext)) {
+						self.command(action, {});
 					}
 				});
 			});
