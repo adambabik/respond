@@ -1,12 +1,13 @@
 # respond
 
-Small JavaScript library which makes web development faster. It provides communication with a web page front-end via CLI, watching files and automatic refreshing.
+respond is a useful tool which makes web development faster. It allows a user to communicate with a web page through CLI, watching files and automatic reloading.
 
 ## Features
 
-* evaluating arbitrary code on a web page font-end using CLI or node application
+* evaluating arbitrary JavaScript code on a web page using CLI or node.js application
 * watching files and responding to their changes
-* dedicated commands to refresh a web application or only CSS files
+* dedicated commands to refresh the whole web page or only CSS files
+* handles many web pages connected to one respond instance
 
 ## Installation
 
@@ -20,7 +21,19 @@ You may need to write `sudo` before the command in order to install it globally.
 
 ## CLI (Command Line Interface)
 
-respond has a command line interface to interact with it without any other applications.
+## Setting up
+
+respond has a command line interface to interact with web pages. To send commands to them you need to put this code in HTML file:
+
+```html
+<script type="text/javascript" src="http://localhost:8000/pub/client.js"></script>
+<script type="text/javascript" src="http://localhost:8000/respond.js"></script>
+<script type="text/javascript">
+	var respond = new Respond('http://localhost:8000');
+</script>
+```
+
+**Tip:** If you would like to, for instance, open a web page from your computer on mobile devices all being in the same local network, you can replace localhost with IP of your computer. All web pages will connect to the respond instance and will be sent commands.
 
 ### Usage
 
@@ -47,6 +60,11 @@ You can run CLI with several options:
 respond can be used in node.js applications. All you need to do is to install respond from NPM (see Installation) and require module in you app.
 
 More details will come soon.
+
+## Todos
+
+* possibility to send a command to a specific client (now each command is broadcasted to all clients)
+* dashboard to manage clients, logs and other
 
 ## License
 

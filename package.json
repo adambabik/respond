@@ -1,7 +1,7 @@
 {
   "name": "respond",
   "version": "0.1.0",
-  "description": "Small JavaScript library which makes web development faster. It provides communication with a web page front-end via CLI, watching files and automatic refreshing.",
+  "description": "Useful tool which makes web development faster. It allows a user to communicate with a web page front-end via CLI, watching files and automatic refreshing.",
   "main": "index.js",
   "preferGlobal": "true",
   "bin": {
