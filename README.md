@@ -33,6 +33,8 @@ respond has a command line interface to interact with web pages. To send command
 </script>
 ```
 
+8000 is a default port on which respond works. See [options](https://github.com/dreame4/respond#options) to change it.
+
 **Tip:** If you would like to, for instance, open a web page from your computer on mobile devices all being in the same local network, you can replace localhost with IP of your computer. All web pages will connect to the respond instance and will be sent commands.
 
 ### Usage
@@ -57,14 +59,14 @@ You can run CLI with several options:
 
 ## Using respond in node.js applications
 
-respond can be used in node.js applications. All you need to do is to install respond from NPM (see Installation) and require module in you app.
+respond can be used in node.js applications. All you need to do is to install respond from NPM (see Installation) and require module in your app.
 
-More details will come soon.
+For now, you may want to check out source code, especially `bin/respond`, to get an idea how to use it. More details come soon.
 
 ## Todos
 
 * possibility to send a command to a specific client (now each command is broadcasted to all clients)
-* dashboard to manage clients, logs and other
+* dashboard to manage clients, logs and other events
 
 ## License
 
