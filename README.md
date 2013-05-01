@@ -21,7 +21,7 @@ You may need to write `sudo` before the command in order to install it globally.
 
 ## CLI (Command Line Interface)
 
-## Setting up
+### Setting up
 
 respond has a command line interface to interact with web pages. To send commands to them you need to put this code in HTML file:
 
