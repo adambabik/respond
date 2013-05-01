@@ -7,16 +7,19 @@ function setMode(component, value) {
 		debugComponents[component] = value;
 }
 
+function setDefault(value) {
+	__default = !!value;
+}
+
 module.exports = function (component, value) {
 	value = !!value;
+
 	if (value) {
-		setMode(component, !!value);
+		setMode(component, value);
 	}
 
 	var fn = setMode.bind(null, component);
-	fn.default = function (val) {
-		return __default = val;
-	};
+	fn.default = setDefault;
 
 	return fn;
 };

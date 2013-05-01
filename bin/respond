@@ -1,58 +1,58 @@
 #!/usr/bin/env node
 
 var program = require('commander'),
-	rl = require('readline'),
-	colors = require('colors'),
-	Respond = require('../index'),
-	debug = require('../src/debug')('respond'),
-	pkg = require('../package.json');
+    rl = require('readline'),
+    colors = require('colors'),
+    Respond = require('../index'),
+    debug = require('../src/debug')('respond'),
+    pkg = require('../package.json');
 
 function list(val) {
-	return val.split(' ');
+  return val.split(' ');
 }
 
 function actions(val) {
-	return val.split(' ').reduce(function (prev, item) {
-		var tuple = item.split('=');
-		prev[tuple[0]] = tuple[1];
-		return prev;
-	}, {});
+  return val.split(' ').reduce(function (prev, item) {
+    var tuple = item.split('=');
+    prev[tuple[0]] = tuple[1];
+    return prev;
+  }, {});
 }
 
 var options = {};
 
 program
-	.version(pkg.version)
-	.usage('[options]')
-	.option('-p, --port <n>', 'set up server port', parseInt)
-	.option('-w, --watch <files>', 'files and directories to watch', list)
-	.option('-a, --actions <actions>', 'actions to execute after file change, e.g. js=refresh means that after change is JavaScript file, refresh command is sent', actions)
-	.option('-e, --exclude <files>', 'excludes files from being observed', list)
-	.option('-d, --debug', 'turns on debug logs to STDOUT', Boolean)
-	.parse(process.argv);
+  .version(pkg.version)
+  .usage('[options]')
+  .option('-p, --port <n>', 'set up server port', parseInt)
+  .option('-w, --watch <files>', 'files and directories to watch', list)
+  .option('-a, --actions <actions>', 'actions to execute after file change, e.g. js=refresh means that after change is JavaScript file, refresh command is sent', actions)
+  .option('-e, --exclude <files>', 'excludes files from being observed', list)
+  .option('-d, --debug', 'turns on debug logs to STDOUT', Boolean)
+  .parse(process.argv);
 
 if (program.debug) {
-	debug.default(program.debug);
+  debug.default(program.debug);
 }
 
 if (program.port) {
-	options.port = program.port;
-	debug() && console.log('[LOG]'.grey, 'Port: %d', program.port);
+  options.port = program.port;
+  debug() && console.log('[LOG]'.grey, 'Port: %d', program.port);
 }
 
 if (program.watch) {
-	options.files = program.watch;
-	debug() && console.log('[LOG]'.grey, 'Watching files:', program.watch);
+  options.files = program.watch;
+  debug() && console.log('[LOG]'.grey, 'Watching files:', program.watch);
 }
 
 if (program.actions) {
-	options.actions = program.actions;
-	debug() && console.log('[LOG]'.grey, 'Actions:', program.actions);
+  options.actions = program.actions;
+  debug() && console.log('[LOG]'.grey, 'Actions:', program.actions);
 }
 
 if (program.exclude) {
-	options.exclude = program.exclude;
-	debug() && console.log('[LOG]'.grey, 'Exclude:', program.exclude);
+  options.exclude = program.exclude;
+  debug() && console.log('[LOG]'.grey, 'Exclude:', program.exclude);
 }
 
 // Server
@@ -60,68 +60,65 @@ if (program.exclude) {
 var respond = new Respond(options);
 
 respond.pubsub.subscribe(Respond.RESULT_CHANNEL, function (message) {
-	debug() && console.log('[ANSWER]'.yellow, message);
-	cli.prompt();
+  debug() && console.log('[ANSWER]'.yellow, message);
 });
 
 // CLI
 
 function showHelp() {
-	console.log();
-	console.log('  Special commands:');
-	console.log();
-	console.log('    :quit                 close application');
-	console.log('    :help                 show help');
-	console.log();
-	console.log('  Regular commands:');
-	console.log();
-	console.log('    eval <command>        evaluate command on active web pages and return results');
-	console.log('    refresh               reload active web pages');
-	console.log('    refreshCSS [<files>]  reload all CSS files or only selected ones');
-	console.log();
+  console.log();
+  console.log('  Special commands:');
+  console.log();
+  console.log('    :quit                 close application');
+  console.log('    :help                 show help');
+  console.log();
+  console.log('  Regular commands:');
+  console.log();
+  console.log('    eval <command>        evaluate command on active web pages and return results');
+  console.log('    refresh               reload active web pages');
+  console.log('    refreshCSS [<files>]  reload all CSS files or only selected ones');
+  console.log();
 }
 
 const PROMPT = 'respond> ';
 
 var cli = rl.createInterface({
-	input: process.stdin,
-	output: process.stdout
+  input: process.stdin,
+  output: process.stdout
 });
 
 cli.setPrompt(PROMPT, PROMPT.length);
 
 function handleNewLine(command) {
-	var parts = list(command),
-		cmd = parts.shift().trim();
+  var parts = list(command),
+    cmd = parts.shift().trim();
 
-	switch (cmd) {
-		case ':quit':
-			respond.server.close();
-			cli.removeListener('line', handleNewLine);
-			cli.write('bye\n');
-			process.exit(0);
-			break;
+  switch (cmd) {
+    case ':quit':
+      respond.server.close();
+      cli.close();
+      break;
 
-		case ':help':
-			showHelp();
-			cli.prompt();
-			break;
+    case ':help':
+      showHelp();
+      cli.prompt();
+      break;
 
-		default:
-			if (cmd) {
-				respond.command(cmd, parts.join(' '));
-			}
-			cli.prompt();
-			break;
-	}
+    default:
+      if (cmd) {
+        respond.command(cmd, parts.join(' '));
+      }
+      cli.prompt();
+      break;
+  }
 }
 
 cli.on('line', handleNewLine);
 
 cli.on('close', function () {
-	cli.removeListener('line', handleNewLine);
-	cli.write('\nbye\n');
-	process.exit(0);
+  cli.removeListener('line', handleNewLine);
+  cli.write('\nbye\n');
+  process.exit(0);
 });
 
 // start!
